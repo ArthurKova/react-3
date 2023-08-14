@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { DebounceInput } from 'react-debounce-input';
 import { toast } from 'react-toastify';
+import propTypes from 'prop-types';
 import './Searchbar.css';
 
 export default class Searchbar extends Component {
@@ -36,31 +37,24 @@ export default class Searchbar extends Component {
           <button type="submit" className="SearchForm-button">
             <span className="SearchForm-button-label">Search</span>
           </button>
-
-          <input
+          <DebounceInput
             className="SearchForm-input"
+            debounceTimeout={100}
             type="text"
             autoComplete="off"
-            name="value"
             autoFocus
-            value={value}
+            name="request"
             placeholder="Search images and photos"
-            onChange={this.userRequest}
+            value={value}
+            onChange={event => this.setState({ value: event.target.value })}
           />
+          ;
         </form>
       </header>
     );
   }
 }
 
-// <DebounceInput
-//   className="SearchForm-input"
-//   debounceTimeout={100}
-//   type="text"
-//   autoComplete="off"
-//   autoFocus
-//   name="request"
-//   placeholder="Search images and photos"
-//   value={value}
-//   onChange={event => this.setState({ value: event.target.value })}
-// />;
+Searchbar.propTypes = {
+  onSubmit: propTypes.func,
+};

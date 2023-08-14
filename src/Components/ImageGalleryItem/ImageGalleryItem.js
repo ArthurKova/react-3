@@ -1,15 +1,16 @@
 import React, { Component } from 'react';
+import propTypes from 'prop-types';
 import './ImageGalleryItem.css';
 
 class ImageGalleryItem extends Component {
   render() {
-    if (this.props.data) {
-      const { hits } = this.props.data;
-      return hits.map(hit => {
+    const { data } = this.props;
+    if (data) {
+      return data.map(hit => {
         const { id, largeImageURL, webformatURL, tags } = hit;
 
         return (
-          <li className="ImageGalleryItem" key={id}>
+          <li className="ImageGalleryItem" key={tags + id}>
             <img
               src={webformatURL}
               alt={tags}
@@ -22,5 +23,9 @@ class ImageGalleryItem extends Component {
     }
   }
 }
+
+ImageGalleryItem.propTypes = {
+  data: propTypes.array,
+};
 
 export default ImageGalleryItem;

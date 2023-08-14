@@ -2,11 +2,11 @@ import React, { Component } from 'react';
 import './ImageGallery.css';
 import ImageGalleryItem from 'Components/ImageGalleryItem/';
 import Button from 'Components/Button/';
-import { Oval } from 'react-loader-spinner';
 import Modal from 'Components/Modal/Modal';
 import Loader from 'Components/Loader/Loader';
-
-const KEY = '38777949-9fd3a86c95b2ce83099656e1b';
+import { toast } from 'react-toastify';
+import galleryFetch from 'Components/api/fetch';
+import propTypes, { array } from 'prop-types';
 
 class ImageGallery extends Component {
   state = {
@@ -15,48 +15,47 @@ class ImageGallery extends Component {
     modalState: false,
     status: 'empty',
     page: 1,
+    error: '',
   };
 
   componentDidUpdate(prevProps, prevState) {
     const prevRequest = prevProps.request;
     const currentRequest = this.props.request;
-    const currentModalState = this.state.modalState;
-    const { page } = this.state.page;
+    const { modalState, page } = this.state;
 
     if (prevRequest !== currentRequest) {
       this.setState({ status: 'loading', page: 1, gallery: null });
       setTimeout(() => {
-        fetch(
-          `https://pixabay.com/api/?key=${KEY}&q=${currentRequest}&page=${page}$&image_type=photo&orientation=horizontal&per_page=12`
-        )
-          .then(response => response.json())
-          .then(gallery => this.setState({ gallery }))
+        galleryFetch(currentRequest, page)
+          .then(response => {
+            const gallery = response.hits;
+            this.setState({ gallery });
+          })
+          .catch(error => this.setState({ error }))
           .finally(this.setState({ status: 'recieve' }));
       }, 1000);
     }
 
-    // if (prevState.page !== page) {
-    //   this.setState({ status: 'loading' });
-    //   setTimeout(() => {
-    //     fetch(
-    //       `https://pixabay.com/api/?key=${KEY}&q=${currentRequest}&page=2}$&image_type=photo&orientation=horizontal&per_page=12`
-    //     )
-    //       .then(response => response.json())
-    //       .then(gallery => this.setState({ gallery }))
-    //       .finally(this.setState({ status: 'recieve' }));
-    //   }, 1000);
-    // }
+    if (prevState.page !== page) {
+      galleryFetch(currentRequest, page).then(response => {
+        const newGallery = response.hits;
+        this.setState({ gallery: [...prevState.gallery, ...newGallery] });
+      });
+    }
 
-    if (currentModalState === true) {
+    if (modalState === true) {
       window.addEventListener('click', this.galleryPageKeyboardClose);
     }
 
-    if (currentModalState === false) {
+    if (modalState === false) {
       window.removeEventListener('click', this.galleryPageKeyboardClose);
     }
   }
+
   // load more page logic
   onLoadMoreClick = num => {
+    const { page } = this.state;
+
     this.setState(prevState => ({
       page: prevState.page + num,
     }));
@@ -86,7 +85,12 @@ class ImageGallery extends Component {
   };
 
   render() {
-    const { gallery, modalData, modalState, status } = this.state;
+    const { gallery, modalData, modalState, status, error } = this.state;
+
+    if (error !== '') {
+      toast.warn(error);
+      this.setState({ error: '' });
+    }
 
     if (status === 'recieve') {
       return (
@@ -113,5 +117,10 @@ class ImageGallery extends Component {
     }
   }
 }
+
+ImageGallery.propTypes = {
+  gallery: propTypes.array,
+  modalData: propTypes.oneOfType([propTypes.string, propTypes.number]),
+};
 
 export default ImageGallery;
